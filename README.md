@@ -1,10 +1,12 @@
 # Helper Utils for Lens Studio
 
-A collection of utility functions and classes to simplify common tasks in [Lens Studio](https://lensstudio.snapchat.com/), including attribute handling, batch operations, text effects, color conversion, deep copying, easing animations, and more.
+<img src="https://images.ctfassets.net/ub38vssza5h3/7FynBv68WKAHYYAe7XQhlk/dfa0ebd5e13c3bdd5b0f34345e65170f/LS.png" width="100" height="100" alt="Lens Studio">
+
+A collection of utility functions and classes to simplify common tasks in Lens Studio, including attribute handling, batch operations, text effects, color conversion, deep copying, easing animations, and more.
 
 ---
 
-## 📦 Installation
+## Installation
 
 Include the helper script in your Lens Studio project. Exported utilities:
 
@@ -14,7 +16,7 @@ const { BatchUtils, QuickUtils, SOGT } = require("path/to/HelperUtils.js");
 
 ---
 
-## 🧰 BatchUtils
+## BatchUtils
 
 ### `writeAttributes(root, attr, readOnly = false, slice = 1)`
 Binds values from an object to another, with optional getter/setter access.
@@ -49,7 +51,7 @@ BatchUtils.batchExecute("init", [obj1, obj2], data);
 
 ---
 
-## ⚡ QuickUtils
+## QuickUtils
 
 ### `delayedCall(delay, script, callback)`
 Runs a callback after a delay using an update loop.
@@ -113,7 +115,7 @@ once(); // prints again
 
 ---
 
-## 🎞️ SOGT: Simple Object Game Timer
+## SOGT: Simple Object Game Timer
 
 A tweening utility class with cycle control, pingpong mode, and easing.
 
@@ -140,7 +142,7 @@ const easedValue = timer.play({ easeFunction: "Cubic", easeType: "InOut" });
 
 ---
 
-## 🧪 EasingFunctions
+## EasingFunctions
 
 Built-in easing support for animation/tweening:
 
