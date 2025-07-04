@@ -834,7 +834,7 @@ class SOGT{
                 return this[loopSymbol];
             },
             set(loopCount){
-                this[loopSymbol] = loopCount = loopCount < 1 ? Infinity : loopCount;
+                this[loopSymbol] = loopCount < 1 ? Infinity : loopCount;
             }
         })
 
