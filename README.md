@@ -115,53 +115,154 @@ once(); // prints again
 
 ---
 
-## SOGT: Simple Object Game Timer
+## Custom Tween
 
-A tweening utility class with cycle control, pingpong mode, and easing.
+The `CustomTween` module provides a robust set of easing functions and the `SOGT` class for advanced animation control.
 
-```js
-const timer = new SOGT();
-timer.duration = 2;
-timer.loop = Infinity;
-timer.pingpong = true;
 
-const easedValue = timer.play({ easeFunction: "Cubic", easeType: "InOut" });
+### `EasingFunctions`
+
+A collection of common easing functions, categorized into `In`, `Out`, and `InOut` variants. These functions can be directly assigned to the `easeFunction` property of an `SOGT` instance.
+
+  
+**Available Easing Functions (and their variants):**
+
+* `Linear.InOut`
+
+* `Quadratic.In`, `Out`, `InOut`
+
+* `Cubic.In`, `Out`, `InOut`
+
+* `Quartic.In`, `Out`, `InOut`
+
+* `Quintic.In`, `Out`, `InOut`
+
+* `Sinusoidal.In`, `Out`, `InOut`
+
+* `Exponential.In`, `Out`, `InOut`
+
+* `Circular.In`, `Out`, `InOut`
+
+* `Elastic.In`, `Out`, `InOut`
+
+* `Back.In`, `Out`, `InOut`
+
+* `Bounce.In`, `Out`, `InOut`
+
+  
+
+### `SOGT` Class
+
+A flexible tweening controller that supports defining animation duration, looping, ping-pong behavior, and applying various easing functions.
+
+  
+**Constructor:**
+
+```javascript
+
+const timer =  new  CustomTween.SOGT();
+
 ```
 
-### Methods:
-- `play({ callback, cycleCallback, easeFunction, easeType })`
-- `pauseResume()`
-- `reset()`
-- `reverse()`
+  
+**Properties:**
 
-### Read-only Properties:
-- `timer.cycleIndex`
-- `timer.progression`
-- `timer.isPaused`
-- `timer.isReversed`
+* `duration: number` (default: 1) - The total time in seconds for one full animation cycle.
 
----
+* `easeFunction: EaseFunction` (default: `EasingFunctions.Linear.InOut`) - The easing function to apply to the progression. Can be any function from `CustomTween.EasingFunctions`.
 
-## EasingFunctions
+* `loop: number` (default: 1) - The number of times the animation should loop. Set to `0` for continuous looping.
 
-Built-in easing support for animation/tweening:
+* `pingpong: boolean` (default: false) - If true, the animation will reverse direction on alternate loops.
 
-```js
-EasingFunctions.Quadratic.InOut(0.5); // → eased value
+
+**Read-only Properties:**
+
+* `cycleIndex: number` - The current completed loop cycle count.
+
+* `progression: number` - The progression of the current cycle (from 0 to 1).
+
+* `isPaused: boolean` - True if the animation is currently paused.
+
+* `isReversed: boolean` - True if the animation is currently playing in reverse.
+
+
+**Methods:**
+
+#### `play({ cycleCallback, callback, easeFunction } = {})`
+
+Advances the animation based on the time delta. This method should be called in an `UpdateEvent` listener.
+
+  
+
+* `options.cycleCallback: function(): void` (optional) - Called at the end of each loop cycle (when `progression` reaches 1 or 0 in reverse).
+
+* `options.callback: function(): void` (optional) - Called when all specified loops (`loop` property) are completed.
+
+* `options.easeFunction: EaseFunction` (optional) - Overrides the current `easeFunction` for this specific `play` call.
+
+Returns the eased progression value (from 0 to 1).
+
+```javascript
+
+const timer =  new  CustomTween.SOGT();
+timer.duration =  2;
+timer.loop =  0; // Infinite loop
+timer.pingpong =  true;
+timer.easeFunction =  CustomTween.EasingFunctions.Quadratic.InOut;  // Set a default easing
+
+script.createEvent("UpdateEvent").bind(()  =>  {
+
+	const easedValue = timer.play({
+		cycleCallback:  ()  => print("Cycle Finished!"),
+		callback:  ()  => print("Animation Complete!"),  // Will only be called if loop is a finite number
+		// You can also override easeFunction here if needed for a specific play call
+		// easeFunction: CustomTween.EasingFunctions.Elastic.Out
+	});
+
+	// Use easedValue to animate properties (e.g., position, scale, opacity)
+	myObject.getTransform().setLocalPosition(new vec3(easedValue * 10, 0, 0));
+});
+
 ```
 
-Available easings:
-- `Linear`
-- `Quadratic`
-- `Cubic`
-- `Quartic`
-- `Quintic`
-- `Sinusoidal`
-- `Exponential`
-- `Circular`
-- `Elastic`
-- `Back`
-- `Bounce`
+  
+#### `pauseResume()`
+
+Toggles the paused state of the animation. If paused, `play()` will not advance the time.
+
+  
+```javascript
+
+timer.pauseResume();  // Pauses the animation
+
+timer.pauseResume();  // Resumes the animation
+
+```
+
+  
+#### `reset()`
+
+Resets the animation timer to its initial state (time to 0, flow to 1, cycle to 0, unpaused). Callbacks are reset to be callable again.
+
+  
+```javascript
+
+timer.reset();
+
+```
+
+  
+#### `reverse()`
+
+Reverses the direction of the animation flow. If playing forward, it will start playing backward from the current `progression`. Callbacks are reset to be callable again.
+
+  
+```javascript
+
+timer.reverse();
+
+```
 
 ---
 > Created by **c4205M (c42m05)**
