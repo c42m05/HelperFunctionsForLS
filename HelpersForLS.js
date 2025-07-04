@@ -1,12 +1,12 @@
 /**
+ * https://github.com/c42m05/HelperFunctionsForLS
+ * 
  * This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published 
  * by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>. 
  */
-
-// https://github.com/c42m05/HelperFunctionsForLS
 
 //#region <BATCH UTILS DEFINITIONS> 
 /**
@@ -526,21 +526,36 @@ function convertHex(hex = "", inVec4 = true) {
 
 //#region <SOGT CLASS>
 /**
- * Collection of easing functions for interpolation.
- * Each easing type supports `In`, `Out`, and `InOut` variants.
- * @namespace EasingFunctions
- * @property {Object<string, function(number): number>} Linear
- * @property {Object<string, function(number): number>} Quadratic
- * @property {Object<string, function(number): number>} Cubic
- * @property {Object<string, function(number): number>} Quartic
- * @property {Object<string, function(number): number>} Quintic
- * @property {Object<string, function(number): number>} Sinusoidal
- * @property {Object<string, function(number): number>} Exponential
- * @property {Object<string, function(number): number>} Circular
- * @property {Object<string, function(number): number>} Elastic
- * @property {Object<string, function(number): number>} Back
- * @property {Object<string, function(number): number>} Bounce
+ * A function that takes a number `k` from 0 to 1 and returns an eased number.
+ * @callback EaseFunction
+ * @param {number} k - A number between 0 and 1.
+ * @returns {number} - Eased output.
  */
+
+/**
+ * Easing function group with `In`, `Out`, and `InOut` variants.
+ * @typedef {Object} EaseGroup
+ * @property {EaseFunction} [In]
+ * @property {EaseFunction} [Out]
+ * @property {EaseFunction} [InOut]
+ */
+
+/**
+ * Collection of easing functions for interpolation.
+ * @namespace
+ * @property {EaseGroup} Linear
+ * @property {EaseGroup} Quadratic
+ * @property {EaseGroup} Cubic
+ * @property {EaseGroup} Quartic
+ * @property {EaseGroup} Quintic
+ * @property {EaseGroup} Sinusoidal
+ * @property {EaseGroup} Exponential
+ * @property {EaseGroup} Circular
+ * @property {EaseGroup} Elastic
+ * @property {EaseGroup} Back
+ * @property {EaseGroup} Bounce
+ */
+
 const EasingFunctions = {
     Linear: {
         InOut: function (k) {
@@ -743,20 +758,24 @@ function Bounce (k) {
 }; 
 
 //
-const time = Symbol("time");
-const flow = Symbol("flow");
-const cycle = Symbol("cycle");
-const loopSymbol = Symbol("loop");
-const progressionSymbol = Symbol("progression");
-const isPausedSymbol = Symbol("isPaused");
-const isReversedSymbol = Symbol("isReversed");
+/** @private */ const time = Symbol("time");
+/** @private */ const flow = Symbol("flow");
+/** @private */ const cycle = Symbol("cycle");
+/** @private */ const loopSymbol = Symbol("loop");
+/** @private */ const progressionSymbol = Symbol("progression");
+/** @private */ const isPausedSymbol = Symbol("isPaused");
+/** @private */ const isReversedSymbol = Symbol("isReversed");
 
-const cycleCallbackCalled = Symbol("cycle");
-const animCallbackCalled = Symbol("cycle");
+/** @private */ const cycleCallbackCalled = Symbol("cycle");
+/** @private */ const animCallbackCalled = Symbol("cycle");
 
 /**
- * For animations and tweening.
- * play, pause, reset, reverse, loop, pingpong, and ease
+ * @module SOGT
+ */
+
+/**
+ * Tweening controller supporting loops, ping-pong, and easing.
+ * @class
  */
 class SOGT{
     /** @constructor */
@@ -795,6 +814,16 @@ class SOGT{
         
         /** @type {number} */
         this.duration = 1;
+        /**
+         * The easing function applied to progression.
+         * Replace with any function from `EasingFunctions`.
+         * 
+         * @example
+         * anim.easeFunction = EasingFunctions.Quadratic.InOut;
+         * 
+         * @type {EaseFunction}
+         */
+        this.easeFunction = EasingFunctions.Linear.InOut;
         /** @type {number} */
         this.loop = 1;
         /** @type {boolean} */
@@ -835,20 +864,19 @@ class SOGT{
     }
 
     /**
-     * Advances the animation by one frame and applies easing.
+     * Advances the animation based on time delta.
+     * Handles easing, looping, ping-pong, and calls appropriate callbacks.
      * 
-     * @param {Object} [options] - Options for play method.
-     * @param {function} [options.cycleCallback] - Called at the end of each cycle except the last.
-     * @param {function} [options.callback] - Called when all loops have completed.
-     * @param {string} [options.easeFunction="Linear"] - Name of easing function family.
-     * @param {string} [options.easeType="InOut"] - Type of easing: In, Out, or InOut.
-     * @returns {number} Eased progression value between 0 and 1.
+     * @param {Object} [options] - Play control options.
+     * @param {function(): void} [options.cycleCallback] - Called at the end of each loop cycle.
+     * @param {function(): void} [options.callback] - Called when all cycles finish.
+     * @param {EaseFunction} [options.easeFunction] - Overrides current ease function for this play call.
+     * @returns {number} - Eased progression from 0 to 1.
      */
     play({
         cycleCallback = function(){},
         callback = function(){},
-        easeFunction = "Linear",
-        easeType = "InOut"
+        easeFunction = null,
     } = {}){
         this[time] = MathUtils.clamp(this[time] + this[flow] * (this[isPausedSymbol] ? 0 : 1) * getDeltaTime(), 0, this.duration);
         this[progressionSymbol] = MathUtils.clamp(this[time] / this.duration, 0, 1);
@@ -886,7 +914,9 @@ class SOGT{
             progress = 1 - this[progressionSymbol];
         }
 
-        return EasingFunctions[easeFunction][easeType](progress);
+        if(easeFunction) this.easeFunction = easeFunction; 
+
+        return this.easeFunction(progress);
     }
 
     /**
@@ -904,6 +934,9 @@ class SOGT{
         this[flow] = 1;
         this[cycle] = 0;
         this[isPausedSymbol] = false;
+
+        this[animCallbackCalled] = false;
+        this[cycleCallbackCalled] = false;
     }
 
     /**
@@ -912,6 +945,9 @@ class SOGT{
     reverse(){
         this[flow] = -this[flow];
         this[isReversedSymbol] = this[flow] < 0;
+
+        this[animCallbackCalled] = false;
+        this[cycleCallbackCalled] = false;
     }
 }
 
@@ -934,8 +970,13 @@ const QuickUtils = {
     singleCall,
 }
 
+const CustomTween = {
+    EasingFunctions,
+    SOGT
+}
+
 module.exports = {
     BatchUtils,
     QuickUtils,
-    SOGT
+    CustomTween,
 }
